@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>利用規約 | 株式会社アビス</title>
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8f8f8;
+            --accent-color: #007aff; /* iOS風の青 */
+            --text-main: #1a1a1a;
+            --text-sub: #666666;
+            --border-color: #e5e5e5;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: #efeff4;
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--primary-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* スマホ風ヘッダー */
+        header {
+            padding: 16px;
+            text-align: center;
+            border-bottom: 0.5px solid var(--border-color);
+            background: #fff;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        #article-title {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-sub);
+            background: var(--secondary-bg);
+            border-bottom: 0.5px solid var(--border-color);
+        }
+
+        /* スクロール領域（スマホで読みやすいフォントサイズに） */
+        #scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            text-align: justify;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 下部ボタンエリア：スマホのフッターに固定 */
+        .footer-ui {
+            padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+            background: #fff;
+            border-top: 0.5px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        #btn-agree {
+            background-color: var(--text-main);
+            color: #fff;
+        }
+
+        #btn-disagree {
+            background-color: transparent;
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: normal;
+            text-decoration: underline;
+        }
+
+        button:active {
+            opacity: 0.6;
+        }
+
+        /* 異変エフェクト */
+        .glitch-text {
+            font-family: "Courier New", monospace;
+            filter: blur(0.3px);
+            color: #000;
+            background: #fffbe6;
+        }
+
+        #fade-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+            z-index: 1000;
+        }
+
+        /* スクロールバー非表示（iOS風） */
+        #scroll-area::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <header>
+        <h1 id="header-title">利用規約の確認</h1>
+    </header>
+    
+    <div id="article-title">第1条</div>
+    
+    <div id="scroll-area"></div>
+
+    <div class="footer-ui">
+        <button id="btn-agree">同意して次へ</button>
+        <button id="btn-disagree">同意しない</button>
+    </div>
+
+    <div id="fade-overlay"></div>
+</div>
+
+<script>
+    let currentArticle = 1;
+    const maxArticle = 15;
+    let isAnomalyActive = false;
+
+    const dom = {
+        title: document.getElementById('article-title'),
+        text: document.getElementById('scroll-area'),
+        btnAgree: document.getElementById('btn-agree'),
+        btnDisagree: document.getElementById('btn-disagree'),
+        overlay: document.getElementById('fade-overlay')
+    };
+
+    const legalBoilerplates = [
+        "本条項の解釈にあたっては、日本法を準拠法とします。本サービスに関して紛争が生じた場合には、当社の本店所在地を管轄する裁判所を専属的合意管轄とします。利用者は、本サービスの利用を開始したことをもって、本規約の各条項に有効かつ取消不能な同意をしたものとみなされます。",
+        "当社は、利用者に事前に通知することなく、いつでも本規約を変更できるものとします。変更後の規約は本アプリ内または公式サイト上に掲示された時点から効力を生じるものとし、継続して利用する場合には、当該変更事項をすべて承諾したものとみなされます。",
+        "本サービス上のコンテンツ（文字、画像、プログラム等）の著作権は、すべて当社または権利者に帰属します。私的使用の範囲を超えてこれらを無断で複製、転用、公衆送信、改変等を行うことは、手段の如何を問わず固く禁じられています。",
+        "利用者は、本サービスを利用するために必要な通信機器、ソフトウェア、その他これらに付随して必要となる全ての機器を、自己の費用と責任において準備し、利用可能な状態に置くものとします。通信料は利用者の負担となります。",
+        "本規約の一部が法令等により無効と判断された場合であっても、残りの規定は完全に効力を維持するものとします。無効となった部分は、当初の意図に最も近い有効な規定に置き換えられるものとします。"
+    ];
+
+    const normalCoreTexts = [
+        "アカウント情報の管理について、利用者は自己の責任においてパスワード等を厳重に管理するものとし、これを第三者に利用させ、または貸与、譲渡、売買等をしてはならないものとします。",
+        "当社は、システムの保守点検、火災、停電、天災地変等の不可抗力により、利用者に事前に通知することなく本サービスの一部または全部を停止することができるものとします。",
+        "禁止事項として、他人の知的財産権の侵害、プライバシーの侵害、名誉毀損、スパム行為、ウィルスの送信、その他運営が不適切と判断する一切の行為を禁止します。",
+        "免責事項として、当社は本サービスに事実上または法律上の瑕疵がないことを明示的にも黙示的にも保証しておりません。利用者が本サービスで被った損害について賠償責任を負わないものとします。",
+        "利用者が本規約に違反した場合、当社は事前の通知なく当該利用者のアカウントを停止または削除し、今後の利用を拒否する権利を有するものとします。"
+    ];
+
+    const anomalies = [
+        { type: "text", content: "アカウント情報の管理について、利用者は自己の意識をサーバーへアップロードし、個人の境界を消失させることに同意します。あなたの思考は当社の資産となります。" },
+        { type: "text", content: "当社は、利用者の日常生活を24時間監視し、不適切と判断された挙動があった場合には、デバイスを通じて高周波ノイズを送信し、是正を促す権利を保有します。" },
+        { type: "visual", content: "【警告】現在、あなたの背後に未確認のエンティティが確認されました。規約に同意し続ける限り、それらは実体化を猶予されます。瞬きをしないでください。" },
+        { type: "glitch", content: "利用規約iのviolationが検知sされました。ユuーザーの現r実的な存z在証明を削除し、デdータ上の塵として再r構成します。同意dしてくdさい。" },
+        { type: "void", content: "" },
+        { type: "repeat", content: "みてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよ" }
+    ];
+
+    const article1Text = `
+1. はじめに
+この利用規約は、ユーザーと株式会社アビスとの間の法的契約です。本アプリを利用することで、ユーザーは本規約の全条項に従うことに同意したことになります。
+
+2. サービスの提供
+当社は、ユーザーに対して本サービスを提供しますが、その完全性、確実性を保証するものではありません。
+
+3. 同意の撤回
+ユーザーは、いつでも本アプリを削除することで同意を撤回できますが、それまでに行われたデータの処理については有効なままとなります。
+
+4. 検品義務（※重要）
+ユーザーは、本規約を承諾する過程において、各条文の整合性を自ら確認する義務（以下「検品義務」）を負います。
+もし条文内に、公序良俗に反する文言、解読不能な文字列、または一般的な社会通念上「異変」と認められる表現が含まれていた場合、ユーザーは直ちに「同意しない」を選択し、その条項を棄却しなければなりません。
+この検品義務を怠り、異変が含まれる条項に「同意」した場合、あるいは正常な条項を「拒絶」した場合、利用資格は即座に喪失し、契約プロセスは冒頭より再試行されるものとします。
+
+5. 準拠法
+本規約は日本法に従って解釈されます。
+    `;
+
+    function initGame() {
+        currentArticle = 1;
+        renderArticle();
+    }
+
+    function silentReset() {
+        dom.overlay.style.opacity = 1;
+        setTimeout(() => {
+            currentArticle = 1;
+            renderArticle();
+            setTimeout(() => dom.overlay.style.opacity = 0, 100);
+        }, 200);
+    }
+
+    function renderArticle() {
+        dom.text.scrollTop = 0;
+        dom.text.classList.remove("glitch-text");
+        
+        if (currentArticle === 1) {
+            dom.title.textContent = "第1条 総則";
+            dom.text.textContent = article1Text;
+            isAnomalyActive = false;
+            dom.btnDisagree.style.visibility = "visible";
+            return;
+        }
+
+        if (currentArticle === maxArticle) {
+            dom.title.textContent = "第15条 最終確認";
+            dom.text.textContent = "おめでとうございます。すべての検品を通過しました。\n\n最後に、あなたのデバイスのカメラへのアクセス権を永久に付与し、私たちがいつでもあなたを見守ることに同意してください。";
+            isAnomalyActive = false;
+            dom.btnDisagree.style.visibility = "hidden";
+            return;
+        }
+
+        const isAnomaly = Math.random() < 0.4;
+        dom.title.textContent = `第${currentArticle}条 サービス規定`;
+        const prefix = legalBoilerplates[Math.floor(Math.random() * legalBoilerplates.length)];
+        const suffix = legalBoilerplates[Math.floor(Math.random() * legalBoilerplates.length)];
+
+        if (isAnomaly) {
+            isAnomalyActive = true;
+            const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
+            dom.text.textContent = anomaly.type === "repeat" ? anomaly.content : (prefix + "\n\n" + anomaly.content + "\n\n" + suffix);
+            if (anomaly.type === "glitch") dom.text.classList.add("glitch-text");
+            if (anomaly.type === "void") dom.text.textContent = "";
+        } else {
+            isAnomalyActive = false;
+            const core = normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)];
+            dom.text.textContent = prefix + "\n\n" + core + "\n\n" + suffix;
+        }
+    }
+
+    function handleDecision(userAgreed) {
+        if (currentArticle === maxArticle) {
+            alert("合意が完了しました。監視を開始します。");
+            location.reload();
+            return;
+        }
+
+        if (currentArticle === 1) {
+            userAgreed ? nextLevel() : silentReset();
+            return;
+        }
+
+        if (isAnomalyActive) {
+            if (userAgreed) {
+                silentReset();
+            } else {
+                // 正解（異変拒否）
+                dom.overlay.style.background = "#fff";
+                dom.overlay.style.opacity = 0.5;
+                setTimeout(() => {
+                    dom.overlay.style.opacity = 0;
+                    nextLevel();
+                }, 200);
+            }
+        } else {
+            userAgreed ? nextLevel() : silentReset();
+        }
+    }
+
+    function nextLevel() {
+        currentArticle++;
+        renderArticle();
+    }
+
+    dom.btnAgree.addEventListener('click', () => handleDecision(true));
+    dom.btnDisagree.addEventListener('click', () => handleDecision(false));
+
+    initGame();
+</script>
+
+</body>
+</html>
