@@ -137,6 +137,55 @@
         #scroll-area::-webkit-scrollbar {
             display: none;
         }
+
+        /* --- 新しいビジュアル要素のCSS --- */
+
+        #eye-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+            z-index: 1; /* コンテンツの下、背景の上 */
+        }
+
+        #win-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            color: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        #win-screen h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        #win-screen p {
+            font-size: 16px;
+            max-width: 400px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        #win-screen button {
+            background-color: var(--accent-color);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -156,6 +205,13 @@
     </div>
 
     <div id="fade-overlay"></div>
+    <img id="eye-image" src="eye.png" alt="" />
+</div>
+
+<div id="win-screen" style="display: none;">
+	<img src="logo.png" width="120px">
+    <h2>プレイありがとうございました</h2>
+    <button id="btn-restart">最初からやり直す</button>
 </div>
 
 <script>
@@ -165,10 +221,15 @@
 
     const dom = {
         title: document.getElementById('article-title'),
+        headerTitle: document.getElementById('header-title'),
         text: document.getElementById('scroll-area'),
         btnAgree: document.getElementById('btn-agree'),
         btnDisagree: document.getElementById('btn-disagree'),
-        overlay: document.getElementById('fade-overlay')
+        overlay: document.getElementById('fade-overlay'),
+        eyeImage: document.getElementById('eye-image'),
+        gameContainer: document.getElementById('game-container'),
+        winScreen: document.getElementById('win-screen'),
+        btnRestart: document.getElementById('btn-restart')
     };
 
     const legalBoilerplates = [
@@ -188,12 +249,37 @@
     ];
 
     const anomalies = [
+        // --- Existing Anomalies ---
         { type: "text", content: "アカウント情報の管理について、利用者は自己の意識をサーバーへアップロードし、個人の境界を消失させることに同意します。あなたの思考は当社の資産となります。" },
         { type: "text", content: "当社は、利用者の日常生活を24時間監視し、不適切と判断された挙動があった場合には、デバイスを通じて高周波ノイズを送信し、是正を促す権利を保有します。" },
         { type: "visual", content: "【警告】現在、あなたの背後に未確認のエンティティが確認されました。規約に同意し続ける限り、それらは実体化を猶予されます。瞬きをしないでください。" },
         { type: "glitch", content: "利用規約iのviolationが検知sされました。ユuーザーの現r実的な存z在証明を削除し、デdータ上の塵として再r構成します。同意dしてくdさい。" },
         { type: "void", content: "" },
-        { type: "repeat", content: "みてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよ" }
+        { type: "repeat", content: "みてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよみてるよ" },
+
+        // --- New Text-Based Anomalies ---
+        { type: "text", content: "本サービスの利用中、利用者のデバイスのマイク及びカメラは常時有効化され、収集された音声および映像データはサービス改善の目的で第三者と共有されます。このプロセスは不可逆的です。" },
+        { type: "text", content: "利用者が本規約に同意した場合、利用者のソーシャルグラフに基づき、近親者最大三人にも本規約が自動的に適用されます。拒否権は利用者の親権者にのみ与えられます。" },
+        { type: "text", content: "本アプリケーションは、睡眠中の利用者の脳活動に影響を与える微弱な電磁波を発生させます。これにより、当社が指定する夢を見ることができます。" },
+        { type: "text", content: "すべての条文は逆から読んでください。規約に同意することで、あなたは過去のすべての選択を当社に譲渡することになります。" },
+        { type: "text", content: "この条文は存在しません。もしあなたにこの文章が見えている場合、直ちにデバイスを物理的に破壊し、10年間一切の電子機器に触れないでください。" },
+        { type: "text", content: "この規約のどこかに、あなたの個人情報が一つだけ含まれています。それを見つけ出し、30秒以内に正しいボタンを押してください。失敗は許されません。" },
+        { type: "text", content: "スクロール速度を心拍数と同期します。同意した場合、あなたの心臓の所有権は当社に移転します。" },
+        { type: "glitch", content: "███████████████。 ███は███であり、███は偽りです。████に同意し、███を受け入れてください。" },
+        { type: "text", content: "おめでとうございます！あなたは抽選に選ばれました。次の条項に同意すると、あなたの現実が一つ上のレイヤーにアップデートされます。現在のセーブデータは失われます。" },
+        { type: "repeat", content: "どこにいるのどこにいるのどこにいるのどこにいるのどこにいるのどこにいるのどこにいるのどこにいるのどこにいるのどこにいるの" },
+        { type: "text", content: "壁のシミを見つめないでください。それはあなたを見ています。規約の続きを読むことで、あなたはそれとの契約を更新します。" },
+
+        // --- New Anomaly Types ---
+        { type: "ui-corruption", target: "header", content: "ワタシと契約して" },
+        { type: "ui-corruption", target: "agree-button", content: "はい" },
+        { type: "ui-corruption", target: "disagree-button", content: "はい" },
+        { type: "ui-corruption", target: "title", content: "第666条 契約" },
+        { type: "style-glitch", css: "font-family: 'Times New Roman', serif; color: #ff0000; text-align: center;" },
+        { type: "style-glitch", css: "filter: invert(1); font-weight: bold;" },
+        { type: "style-glitch", css: "writing-mode: vertical-rl; letter-spacing: 5px;" },
+        { type: "eye-sighting", opacity: 0.1 },
+        { type: "eye-sighting", opacity: 0.25 }
     ];
 
     const article1Text = `
@@ -230,9 +316,16 @@
     }
 
     function renderArticle() {
+        // --- Reset visual glitches from previous article ---
         dom.text.scrollTop = 0;
         dom.text.classList.remove("glitch-text");
-        
+        dom.text.style.cssText = ""; // Remove inline styles
+        dom.eyeImage.style.opacity = 0; // Hide the eye
+        dom.headerTitle.textContent = "利用規約の確認";
+        dom.btnAgree.textContent = "同意して次へ";
+        dom.btnDisagree.textContent = "同意しない";
+        dom.title.textContent = `第${currentArticle}条`;
+
         if (currentArticle === 1) {
             dom.title.textContent = "第1条 総則";
             dom.text.textContent = article1Text;
@@ -249,7 +342,7 @@
             return;
         }
 
-        const isAnomaly = Math.random() < 0.4;
+        const isAnomaly = Math.random() < 0.6; // Increased anomaly chance
         dom.title.textContent = `第${currentArticle}条 サービス規定`;
         const prefix = legalBoilerplates[Math.floor(Math.random() * legalBoilerplates.length)];
         const suffix = legalBoilerplates[Math.floor(Math.random() * legalBoilerplates.length)];
@@ -257,9 +350,46 @@
         if (isAnomaly) {
             isAnomalyActive = true;
             const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
-            dom.text.textContent = anomaly.type === "repeat" ? anomaly.content : (prefix + "\n\n" + anomaly.content + "\n\n" + suffix);
-            if (anomaly.type === "glitch") dom.text.classList.add("glitch-text");
-            if (anomaly.type === "void") dom.text.textContent = "";
+            
+            // --- Handle different anomaly types ---
+            switch (anomaly.type) {
+                case "text":
+                case "visual":
+                case "repeat":
+                    dom.text.textContent = anomaly.type === "repeat" ? anomaly.content : (prefix + "\n\n" + anomaly.content + "\n\n" + suffix);
+                    break;
+                case "glitch":
+                    dom.text.textContent = prefix + "\n\n" + anomaly.content + "\n\n" + suffix;
+                    dom.text.classList.add("glitch-text");
+                    break;
+                case "void":
+                    dom.text.textContent = "";
+                    break;
+                case "ui-corruption":
+                    // Apply a normal text as background
+                    dom.text.textContent = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
+                    switch (anomaly.target) {
+                        case "header": dom.headerTitle.textContent = anomaly.content; break;
+                        case "title": dom.title.textContent = anomaly.content; break;
+                        case "agree-button": dom.btnAgree.textContent = anomaly.content; break;
+                        case "disagree-button": dom.btnDisagree.textContent = anomaly.content; break;
+                    }
+                    break;
+                case "style-glitch":
+                    dom.text.textContent = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
+                    dom.text.style.cssText = anomaly.css;
+                    break;
+                case "eye-sighting":
+                     dom.text.textContent = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
+                    dom.eyeImage.style.opacity = anomaly.opacity;
+                    break;
+                default:
+                    // Fallback for any unhandled types
+                    isAnomalyActive = false;
+                    const coreText = normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)];
+                    dom.text.textContent = prefix + "\n\n" + coreText + "\n\n" + suffix;
+                    break;
+            }
         } else {
             isAnomalyActive = false;
             const core = normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)];
@@ -269,8 +399,14 @@
 
     function handleDecision(userAgreed) {
         if (currentArticle === maxArticle) {
-            alert("【利用規約第15条】\n 【お客様の��について】\n プレイありがとうございました");
-            location.reload();
+            if (userAgreed) {
+                // --- Player wins the game ---
+                dom.gameContainer.style.display = 'none';
+                dom.winScreen.style.display = 'flex';
+            } else {
+                // This case should not happen as the button is hidden
+                silentReset();
+            }
             return;
         }
 
@@ -303,6 +439,11 @@
 
     dom.btnAgree.addEventListener('click', () => handleDecision(true));
     dom.btnDisagree.addEventListener('click', () => handleDecision(false));
+    dom.btnRestart.addEventListener('click', () => {
+        dom.winScreen.style.display = 'none';
+        dom.gameContainer.style.display = 'flex';
+        initGame();
+    });
 
     initGame();
 </script>
