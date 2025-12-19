@@ -314,7 +314,7 @@
         const lastParagraph = paragraphs[paragraphs.length - 1];
         if (lastParagraph.length > 2) {
             const charIndex = Math.floor(Math.random() * (lastParagraph.length - 1)) + 1; // 最初の文字は除外
-            const glitchChar = "■";
+            const glitchChar = "�";
             const newLastParagraph = lastParagraph.substring(0, charIndex) + glitchChar + lastParagraph.substring(charIndex + 1);
             paragraphs[paragraphs.length - 1] = newLastParagraph;
             return paragraphs.join('\n\n');
