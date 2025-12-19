@@ -237,7 +237,8 @@
         "当社は、利用者に事前に通知することなく、いつでも本規約を変更できるものとします。変更後の規約は本アプリ内または公式サイト上に掲示された時点から効力を生じるものとし、継続して利用する場合には、当該変更事項をすべて承諾したものとみなされます。",
         "本サービス上のコンテンツ（文字、画像、プログラム等）の著作権は、すべて当社または権利者に帰属します。私的使用の範囲を超えてこれらを無断で複製、転用、公衆送信、改変等を行うことは、手段の如何を問わず固く禁じられています。",
         "利用者は、本サービスを利用するために必要な通信機器、ソフトウェア、その他これらに付随して必要となる全ての機器を、自己の費用と責任において準備し、利用可能な状態に置くものとします。通信料は利用者の負担となります。",
-        "本規約の一部が法令等により無効と判断された場合であっても、残りの規定は完全に効力を維持するものとします。無効となった部分は、当初の意図に最も近い有効な規定に置き換えられるものとします。"
+        "本規約の一部が法令等により無効と判断された場合であっても、残りの規定は完全に効力を維持するものとします。無効となった部分は、当初の意図に最も近い有効な規定に置き換えられるものとします。",
+        "本サービスの特定の機能に関する追加規約は、本規約の一部を構成します。追加規約が本規約と矛盾する場合、詳細は第5条を参照の上、追加規約が優先されるものとします。"
     ];
 
     const normalCoreTexts = [
@@ -279,7 +280,9 @@
         { type: "style-glitch", css: "filter: invert(1); font-weight: bold;" },
         { type: "style-glitch", css: "writing-mode: vertical-rl; letter-spacing: 5px;" },
         { type: "eye-sighting", opacity: 0.1 },
-        { type: "eye-sighting", opacity: 0.25 }
+        { type: "eye-sighting", opacity: 0.25 },
+        { type: "last-char-glitch" },
+        { type: "invalid-number-glitch" }
     ];
 
     const article1Text = `
@@ -304,6 +307,25 @@
     function initGame() {
         currentArticle = 1;
         renderArticle();
+    }
+
+    function applyLastCharGlitch(text) {
+        const paragraphs = text.split('\n\n');
+        const lastParagraph = paragraphs[paragraphs.length - 1];
+        if (lastParagraph.length > 2) {
+            const charIndex = Math.floor(Math.random() * (lastParagraph.length - 1)) + 1; // 最初の文字は除外
+            const glitchChar = "■";
+            const newLastParagraph = lastParagraph.substring(0, charIndex) + glitchChar + lastParagraph.substring(charIndex + 1);
+            paragraphs[paragraphs.length - 1] = newLastParagraph;
+            return paragraphs.join('\n\n');
+        }
+        return text;
+    }
+
+    function applyInvalidNumberGlitch(text) {
+        const invalidNumbers = ["0", "-1", "i", "2.5", "65536"];
+        const invalidNumber = invalidNumbers[Math.floor(Math.random() * invalidNumbers.length)];
+        return text.replace(/第(\d+)条/g, `第${invalidNumber}条`);
     }
 
     function silentReset() {
@@ -382,6 +404,18 @@
                 case "eye-sighting":
                      dom.text.textContent = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
                     dom.eyeImage.style.opacity = anomaly.opacity;
+                    break;
+                case "last-char-glitch":
+                    {
+                        const normalText = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
+                        dom.text.textContent = applyLastCharGlitch(normalText);
+                    }
+                    break;
+                case "invalid-number-glitch":
+                    {
+                        const normalText = prefix + "\n\n" + normalCoreTexts[Math.floor(Math.random() * normalCoreTexts.length)] + "\n\n" + suffix;
+                        dom.text.textContent = applyInvalidNumberGlitch(normalText);
+                    }
                     break;
                 default:
                     // Fallback for any unhandled types
