@@ -211,10 +211,12 @@
 <div id="win-screen" style="display: none;">
 	<img src="logo.png" width="120px">
     <h2>プレイありがとうございました</h2>
+    <p id="clear-time"></p>
     <button id="btn-restart">最初からやり直す</button>
 </div>
 
 <script>
+    let startTime;
     let currentArticle = 1;
     const maxArticle = 15;
     let isAnomalyActive = false;
@@ -305,6 +307,7 @@
     `;
 
     function initGame() {
+        startTime = new Date();
         currentArticle = 1;
         renderArticle();
     }
@@ -435,6 +438,9 @@
         if (currentArticle === maxArticle) {
             if (userAgreed) {
                 // --- Player wins the game ---
+                const endTime = new Date();
+                const elapsedTime = (endTime - startTime) / 1000;
+                document.getElementById('clear-time').textContent = `クリアタイム: ${elapsedTime.toFixed(2)}秒`;
                 dom.gameContainer.style.display = 'none';
                 dom.winScreen.style.display = 'flex';
             } else {
